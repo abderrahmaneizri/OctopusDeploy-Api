@@ -1,11 +1,12 @@
-﻿$ErrorActionPreference = "Stop";
+$ErrorActionPreference = "Stop";
 
 # Define working variables
 $octopusURL = "https://youroctourl"
 $octopusAPIKey = "API-YOURAPIKEY"
 $header = @{ "X-Octopus-ApiKey" = $octopusAPIKey }
+$spaceName = "default"
 $machineName = "MyMachine"
-$machineEnabled = $true
+$targetRole = "MyRole"
 
 # Get space
 $space = (Invoke-RestMethod -Method Get -Uri "$octopusURL/api/spaces/all" -Headers $header) | Where-Object {$_.Name -eq $spaceName}
@@ -13,8 +14,7 @@ $space = (Invoke-RestMethod -Method Get -Uri "$octopusURL/api/spaces/all" -Heade
 # Get machine
 $machine = (Invoke-RestMethod -Method Get -Uri "$octopusURL/api/$($space.Id)/machines/all" -Headers $header) | Where-Object {$_.Name -eq $machineName}
 
-# Enable/disable machine
-$machine.IsDisabled = !$machineEnabled
+# Remove target role
+$machine.Roles = $machine.Roles | Where-Object { $_ -ne $targetRole }
 
-# Update machine
-Invoke-RestMethod -Method Put -Uri "$octopusURL/api/$($space.Id)/machines/$($machine.Id)" -Headers $header -Body ($machine | ConvertTo-Json -Depth 10)
+Invoke-RestMethod -Method Put -Uri "$octopusURL/api/$($space.Id)/machines/$($machine.Id)" -Body ($machine | ConvertTo-Json -Depth 10) -Headers $header
